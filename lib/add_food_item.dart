@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:trilicious_dashboard/api/menu_item_api.dart';
-import 'package:trilicious_dashboard/models/menu_item.dart';
-import 'package:trilicious_dashboard/notifiers/menu_item_notifier.dart';
+import 'package:trilicious_dashboard/api/food_item_api.dart';
+import 'package:trilicious_dashboard/models/food_item.dart';
+// import 'package:trilicious_dashboard/notifiers/category_notifier.dart';
+import 'package:trilicious_dashboard/notifiers/food_item_notifier.dart';
 import 'package:provider/provider.dart';
 
-class AddMenuItemScreen extends StatefulWidget {
+class AddFoodItemScreen extends StatefulWidget {
   final bool isUpdating;
-  const AddMenuItemScreen({Key? key, required this.isUpdating})
+  const AddFoodItemScreen({Key? key, required this.isUpdating})
       : super(key: key);
   @override
-  State<AddMenuItemScreen> createState() => _AddMenuItemScreenState();
+  State<AddFoodItemScreen> createState() => _AddFoodItemScreenState();
 }
 
-class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
+class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController itemDescriptionController =
@@ -22,27 +23,29 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
   final TextEditingController itemNameController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-  MenuItem? _currentMenuItem;
+  FoodItem? _currentFoodItem;
   String? _imageUrl;
   File? _imageFile;
 
   @override
   void initState() {
     super.initState();
-    MenuItemNotifier menuItemNotifier =
-        Provider.of<MenuItemNotifier>(context, listen: false);
+    FoodItemNotifier foodItemNotifier =
+        Provider.of<FoodItemNotifier>(context, listen: false);
 
-    if (menuItemNotifier.currentMenuItem != null) {
-      _currentMenuItem = menuItemNotifier.currentMenuItem;
+    if (foodItemNotifier.currentFoodItem != null) {
+      _currentFoodItem = foodItemNotifier.currentFoodItem;
     } else {
-      _currentMenuItem = MenuItem();
+      _currentFoodItem = FoodItem();
     }
-    // print(_currentMenuItem!.image);
-    // print(_currentMenuItem!.itemName);
-    // print(_currentMenuItem!.description);
-    // print(_currentMenuItem!.price);
-    _imageUrl = _currentMenuItem?.image;
+    _imageUrl = _currentFoodItem?.image;
   }
+
+  // List<String> _options = ['Regular', 'Medium', 'Large'];
+  //   String? _selectedOption = 'Regular';
+
+  // List<String> _addOns = ['Mushroom', 'Olives', 'Cheese'];
+  //   String? _selected = 'Regular';
 
   _showImage() {
     if (_imageFile == null && _imageUrl == null) {
@@ -135,7 +138,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
   Widget build(BuildContext context) {
     final itemNameField = TextFormField(
       autofocus: false,
-      initialValue: _currentMenuItem!.itemName,
+      initialValue: _currentFoodItem!.itemName,
       keyboardType: TextInputType.text,
       validator: (value) {
         // RegExp regex = RegExp(r'^.{3,}$');
@@ -149,7 +152,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
       },
       onSaved: (value) {
         // itemNameController.text = value!;
-        _currentMenuItem?.itemName = value;
+        _currentFoodItem?.itemName = value;
       },
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
@@ -168,7 +171,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
     );
     final itemDescriptionField = TextFormField(
       autofocus: false,
-      initialValue: _currentMenuItem?.description,
+      initialValue: _currentFoodItem?.description,
       // controller: itemDescriptionController,
       keyboardType: TextInputType.multiline,
       maxLines: null,
@@ -184,7 +187,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
       },
       onSaved: (value) {
         // itemDescriptionController.text = value!;
-        _currentMenuItem?.description = value;
+        _currentFoodItem?.description = value;
       },
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
@@ -203,9 +206,9 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
     );
     final priceField = TextFormField(
       autofocus: false,
-      initialValue: _currentMenuItem?.price.toString() == "null"
+      initialValue: _currentFoodItem?.price.toString() == "null"
           ? ""
-          : _currentMenuItem?.price.toString(),
+          : _currentFoodItem?.price.toString(),
       // controller: priceController,
       keyboardType: TextInputType.number,
       validator: (value) {
@@ -221,7 +224,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
       },
       onSaved: (value) {
         // priceController.text = value!;
-        _currentMenuItem?.price = int.parse(value.toString());
+        _currentFoodItem?.price = int.parse(value.toString());
       },
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
@@ -239,17 +242,19 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
       ),
     );
 
-    _onMenuItemUploaded(MenuItem menuItem) {
-      MenuItemNotifier menuItemNotifier =
-          Provider.of<MenuItemNotifier>(context, listen: false);
-      if (menuItem.updatedAt == null) {
-        menuItemNotifier.addMenuItem(menuItem);
+    _onFoodItemUploaded(FoodItem foodItem) {
+      FoodItemNotifier foodItemNotifier =
+          Provider.of<FoodItemNotifier>(context, listen: false);
+      // CategoryNotifier categoryNotifier = Provider.of<CategoryNotifier>(context, listen: false);
+      if (foodItem.updatedAt == null) {
+        foodItemNotifier.addFoodItem(
+            foodItem, foodItemNotifier.currentCategory.toString());
       }
       Navigator.pop(context);
     }
 
-    _saveMenuItem() {
-      print('saveMenuItem Called');
+    _saveFoodItem() {
+      print('saveFoodItem Called');
       if (!_formKey.currentState!.validate()) {
         return;
       }
@@ -257,36 +262,37 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
       _formKey.currentState!.save();
 
       print('form saved');
+      FoodItemNotifier foodItemNotifier =
+          Provider.of<FoodItemNotifier>(context, listen: false);
 
-      // _currentMenuItem.subIngredients = _subingredients;
-      // print("name: ${_currentMenuItem?.itemName}");
-      // print("description: ${_currentMenuItem?.description}");
-      // print("price: ${_currentMenuItem?.price.toString()}");
-      // print("_imageFile ${_imageFile.toString()}");
-      // print("_imageUrl $_imageUrl");
+      uploadFoodItemAndImage(
+          _currentFoodItem!,
+          foodItemNotifier.currentCategory.toString(),
+          widget.isUpdating,
+          _imageFile!,
+          _onFoodItemUploaded);
 
-      uploadMenuItemAndImage(_currentMenuItem!, widget.isUpdating, _imageFile!,
-          _onMenuItemUploaded);
-
-      // print("name: ${_currentMenuItem?.itemName}");
-      // print("description: ${_currentMenuItem?.description}");
-      // print("price: ${_currentMenuItem?.price.toString()}");
+      // print("name: ${_currentFoodItem?.itemName}");
+      // print("description: ${_currentFoodItem?.description}");
+      // print("price: ${_currentFoodItem?.price.toString()}");
       // print("_imageFile ${_imageFile.toString()}");
       // print("_imageUrl $_imageUrl");
     }
 
-    MenuItemNotifier menuItemNotifier =
-        Provider.of<MenuItemNotifier>(context, listen: false);
+    FoodItemNotifier foodItemNotifier =
+        Provider.of<FoodItemNotifier>(context, listen: false);
 
-    _onMenuItemDeleted(MenuItem menuItem) {
+    _onFoodItemDeleted(FoodItem foodItem) {
+      // CategoryNotifier categoryNotifier = Provider.of<CategoryNotifier>(context, listen: false);
       Navigator.pop(context);
-      menuItemNotifier.deleteMenuItem(menuItem);
+      foodItemNotifier.deleteFoodItem(
+          foodItem, foodItemNotifier.currentCategory.toString());
     }
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('ADD MENU ITEM'),
+        title: const Text('ADD Food ITEM'),
         backgroundColor: Colors.orange,
         actions: [
           IconButton(
@@ -296,19 +302,18 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('Delete this item?'),
+                    title: const Text('Delete this item?'),
                     actions: [
                       _DialogButton(
                           text: 'Cancel',
-                          onPressed: ()=>Navigator.of(context).pop()),
+                          onPressed: () => Navigator.of(context).pop()),
                       _DialogButton(
-                        text: 'OK',
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          deleteMenuItem(
-                            _currentMenuItem!, _onMenuItemDeleted);
-                        } 
-                      ),
+                          text: 'OK',
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            deleteFoodItem(
+                                _currentFoodItem!, _onFoodItemDeleted);
+                          }),
                     ],
                   );
                 },
@@ -350,7 +355,8 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(50.0),
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: const [
                                         Icon(Icons.add),
                                         Text(
@@ -368,6 +374,22 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                           : _showImage(),
                     ),
                   ),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  //   children: [
+                  //     DropdownButton<String>(
+                  //         value: _selectedOption,
+                  //         items: _options.map(
+                  //           (item) => DropdownMenuItem<String>(
+                  //             value: item,
+                  //             child: Text(item),
+                  //           ),
+                  //         ).toList(),
+                  //         onChanged: (item)=>setState(() {
+                  //           _selectedOption=item;
+                  //         }),),
+                  //   ],
+                  // ),
                   Padding(
                     padding: const EdgeInsets.all(15.0),
                     child: itemDescriptionField,
@@ -387,7 +409,7 @@ class _AddMenuItemScreenState extends State<AddMenuItemScreen> {
                 primary: Colors.orange,
               ),
               onPressed: () {
-                _saveMenuItem();
+                _saveFoodItem();
               },
               child: Padding(
                 padding: const EdgeInsets.only(

@@ -1,22 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class MenuItem{
+class FoodItem{
   String? id;
   String? image;
   String? itemName;
+  // Map<String,int>? options;
+  // Map<String,int>? addOns;
   int? price;
   String? description;
   bool? isAvailable;
   Timestamp? createdAt;
   Timestamp? updatedAt;
 
-  MenuItem({this.id,this.image,this.itemName,this.price,this.description,this.isAvailable,this.createdAt,this.updatedAt});
+  FoodItem({this.id,this.image,this.itemName,this.price,this.description,this.isAvailable,this.createdAt,this.updatedAt});
 
-  factory MenuItem.fromMap(map){
-    return MenuItem(
+  factory FoodItem.fromMap(map){
+    return FoodItem(
       id:map['id'],
       image:map['image'],
       itemName:map['itemName'],
+      // options: map['options'],
+      // addOns: map['addOns'],
       price:map['price'],
       description:map['description'],
       isAvailable: map['isAvailable'],
@@ -30,6 +34,8 @@ class MenuItem{
       'id':id,
       'image':image,
       'itemName':itemName,
+      // 'options':options,
+      // 'addOns':addOns,
       'price':price,
       'description':description,
       'isAvailable':isAvailable,

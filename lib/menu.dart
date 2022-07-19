@@ -1,11 +1,16 @@
-import 'package:outline_gradient_button/outline_gradient_button.dart';
-import 'package:trilicious_dashboard/api/menu_item_api.dart';
+import 'package:trilicious_dashboard/api/food_item_api.dart';
+import 'package:trilicious_dashboard/api/profile_api.dart';
+// import 'package:trilicious_dashboard/models/food_item.dart';
+// import 'package:trilicious_dashboard/notifiers/category_notifier.dart';
 // import 'package:trilicious_dashboard/notifier/auth_notifier.dart';
-import 'package:trilicious_dashboard/notifiers/menu_item_notifier.dart';
+import 'package:trilicious_dashboard/notifiers/food_item_notifier.dart';
 // import 'package:trilicious_dashboard/screens/detail.dart';
-import 'package:trilicious_dashboard/add_menu_item.dart';
+import 'package:trilicious_dashboard/add_food_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:trilicious_dashboard/notifiers/profile_notifier.dart';
+
+// final _firestore = FirebaseFirestore.instance;
 
 class Menu extends StatefulWidget {
   const Menu({Key? key}) : super(key: key);
@@ -17,9 +22,15 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   @override
   void initState() {
-    MenuItemNotifier menuItemNotifier =
-        Provider.of<MenuItemNotifier>(context, listen: false);
-    getMenuItems(menuItemNotifier);
+    FoodItemNotifier foodItemNotifier =
+        Provider.of<FoodItemNotifier>(context,listen: false);
+    // ProfileNotifier profileNotifier = Provider.of<ProfileNotifier>(context,listen:false);
+    // getProfile(profileNotifier);
+    // print(profileNotifier.currentRestaurant);
+    getCategories(foodItemNotifier).then((value){
+      getFoodItems(foodItemNotifier);
+      foodItemNotifier.currentCategory=foodItemNotifier.categoryList[0];
+      });
     super.initState();
   }
 
@@ -28,11 +39,18 @@ class _MenuState extends State<Menu> {
   @override
   Widget build(BuildContext context) {
     // AuthNotifier authNotifier = Provider.of<AuthNotifier>(context);
-    MenuItemNotifier menuItemNotifier = Provider.of<MenuItemNotifier>(context);
+    FoodItemNotifier foodItemNotifier = Provider.of<FoodItemNotifier>(context);
+
+    // List<FoodItem>? itemList = foodItemNotifier.foodItemMap[foodItemNotifier.currentCategory.toString()];
 
     Future<void> _refreshList() async {
-      getMenuItems(menuItemNotifier);
+      getCategories(foodItemNotifier).then((value){
+      getFoodItems(foodItemNotifier);
+      // foodItemNotifier.currentCategory=foodItemNotifier.categoryList[0];
+      });
     }
+
+    // List<String> categoryList = ['Pizza', 'Pasta'];
 
     // print("building Menu");
     return Scaffold(
@@ -41,67 +59,111 @@ class _MenuState extends State<Menu> {
             // authNotifier.user != null ? authNotifier.user.displayName : "Menu",
             'MENU'),
         backgroundColor: Colors.orange,
-        // actions: <Widget>[
-        //   // action button
-        //   FlatButton(
-        //     onPressed: () => signout(authNotifier),
-        //     child: Text(
-        //       "Logout",
-        //       style: TextStyle(fontSize: 20, color: Colors.white),
-        //     ),
-        //   ),
-        // ],
       ),
-      body: RefreshIndicator(
-        child: ListView.separated(
-          itemBuilder: (BuildContext context, int index) {
-            return GestureDetector(
-              onTap: () {
-                menuItemNotifier.currentMenuItem = menuItemNotifier.menuItemList[index];
-                Navigator.of(context)
-                    .push(MaterialPageRoute(builder: (BuildContext context) {
-                  return const AddMenuItemScreen(
-                    isUpdating: true,
-                  );
-                }));
-              },
-              child: ItemCard(
-                image: menuItemNotifier.menuItemList[index].image.toString(),
-                itemName:
-                    menuItemNotifier.menuItemList[index].itemName.toString(),
-                description: menuItemNotifier.menuItemList[index].description
-                    .toString(),
-                price: int.parse(
-                    menuItemNotifier.menuItemList[index].price.toString()),
-                    isAvailable: Switch(
-                      value: menuItemNotifier.menuItemList[index].isAvailable??false,
-                      onChanged: (value) {
-                        menuItemNotifier.currentMenuItem = menuItemNotifier.menuItemList[index];
-                        setState(() {
-                          menuItemNotifier.menuItemList[index].isAvailable=value;
-                        });
-                      },
+      body: Column(
+        children: [
+          Flexible(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                color: Colors.orange,
+                child: Row(
+                  children: [
+                    foodItemNotifier.categoryList.isNotEmpty?
+                    Expanded(
+                      child: ListView.builder(
+                          itemCount: foodItemNotifier.categoryList.length,
+                          // reverse: true,
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (BuildContext context, int index) {
+                            return CategoryButton(
+                                category: foodItemNotifier.categoryList[index],
+                                onPressed: () {
+                                  foodItemNotifier.currentCategory=foodItemNotifier.categoryList[index];
+                                  foodItemNotifier.foodItemList=foodItemNotifier.foodItemMap[foodItemNotifier.currentCategory.toString()]??[];
+                                  print(foodItemNotifier.foodItemList);
+                                },
+                                isSelected: foodItemNotifier.currentCategory==foodItemNotifier.categoryList[index],
+                                );
+                                
+                          }),
+                    ):Container(),
+                    IconButton(
+                      onPressed: () => showAddCategoryDialog(context),
+                      icon: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                      ),
                     ),
+                  ],
+                ),
               ),
-            );
-          },
-          itemCount: menuItemNotifier.menuItemList.length,
-          separatorBuilder: (BuildContext context, int index) {
-            return const SizedBox(
-              width: 0,
-              height: 0,
-            );
-          },
-        ),
-        onRefresh: _refreshList,
+            ),
+          ),
+          foodItemNotifier.foodItemList.isNotEmpty?
+          Flexible(
+            flex: 7,
+            child: RefreshIndicator(
+              child: ListView.separated(
+                itemBuilder: (BuildContext context, int index) {
+                  return GestureDetector(
+                    onTap: () {
+                      foodItemNotifier.currentFoodItem =
+                          foodItemNotifier.foodItemList[index];
+                      Navigator.of(context).push(
+                          MaterialPageRoute(builder: (BuildContext context) {
+                        return const AddFoodItemScreen(
+                          isUpdating: true,
+                        );
+                      }));
+                    },
+                    child: ItemCard(
+                      image:
+                          foodItemNotifier.foodItemList[index].image.toString(),
+                      itemName: foodItemNotifier.foodItemList[index].itemName
+                          .toString(),
+                      description: foodItemNotifier.foodItemList[index].description
+                          .toString(),
+                      price: foodItemNotifier.foodItemList[index].price
+                          ??0,
+                      isAvailable: Switch(
+                        value:
+                            foodItemNotifier.foodItemList[index].isAvailable ??
+                                false,
+                        onChanged: (value) {
+                          foodItemNotifier.currentFoodItem =
+                              foodItemNotifier.foodItemList[index];
+                          // setState(() {
+                          foodItemNotifier.foodItemList[index].isAvailable =
+                              value;
+                          changeAvailability(
+                              foodItemNotifier.foodItemList[index],foodItemNotifier.currentCategory.toString(), value);
+                          // });
+                        },
+                      ),
+                    ),
+                  );
+                },
+                itemCount: foodItemNotifier.foodItemList.length,
+                separatorBuilder: (BuildContext context, int index) {
+                  return const SizedBox(
+                    width: 0,
+                    height: 0,
+                  );
+                },
+              ),
+              onRefresh: _refreshList,
+            ),
+          ):const Flexible(flex: 7,child: Center(child: Text('No Items in this category'),)),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.orange,
         onPressed: () {
-          menuItemNotifier.currentMenuItem = null;
+          foodItemNotifier.currentFoodItem = null;
           Navigator.of(context).push(
             MaterialPageRoute(builder: (BuildContext context) {
-              return const AddMenuItemScreen(
+              return const AddFoodItemScreen(
                 isUpdating: false,
               );
             }),
@@ -114,14 +176,95 @@ class _MenuState extends State<Menu> {
   }
 }
 
+class CategoryButton extends StatelessWidget {
+  final String category;
+  final VoidCallback onPressed;
+  final bool isSelected;
+  const CategoryButton({
+    Key? key,
+    required this.category,
+    required this.onPressed,
+    required this.isSelected
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: OutlinedButton(
+        onPressed: onPressed,
+        child: Text(category),
+        style: OutlinedButton.styleFrom(
+          // backgroundColor: Colors.white,
+          primary: isSelected?Colors.black:Colors.white,
+          backgroundColor: isSelected?Colors.white:Colors.transparent,
+          side: const BorderSide(
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+showAddCategoryDialog(BuildContext context) {
+  // _onCategoryUploaded(List<String> categories) {
+  //     foodItemNotifier foodItemNotifier =
+  //         Provider.of<foodItemNotifier>(context, listen: false);
+  //     if (foodItem.updatedAt == null) {
+  //       foodItemNotifier.addFoodItem(foodItem);
+  //     }
+  //     Navigator.pop(context);
+  //   }
+  showDialog(
+    context: context,
+    builder: (_) {
+    //   _onCategoryUploaded( foodItem) {
+    //   FoodItemNotifier foodItemNotifier =
+    //       Provider.of<FoodItemNotifier>(context, listen: false);
+    //   if (foodItem.updatedAt == null) {
+    //     foodItemNotifier.addFoodItem(foodItem);
+    //   }
+    //   Navigator.pop(context);
+    // }
+      FoodItemNotifier foodItemNotifier =
+          Provider.of<FoodItemNotifier>(context);
+      var categoryController = TextEditingController();
+      return AlertDialog(
+        title: const Text('Add Category'),
+        content: TextFormField(
+          controller: categoryController,
+          decoration: const InputDecoration(hintText: 'Category'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Send them to your email maybe?
+              String category = categoryController.text;
+              foodItemNotifier.addCategory(category);
+              uploadCategory(foodItemNotifier.categoryList);
+              Navigator.pop(context);
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 class ItemCard extends StatefulWidget {
-  final String image;
-  final String itemName;
-  final String description;
+  final String? image;
+  final String? itemName;
+  final String? description;
   final int price;
-  Widget isAvailable;
-  
-  ItemCard(
+  final Widget isAvailable;
+
+  const ItemCard(
       {Key? key,
       required this.image,
       required this.itemName,
@@ -135,7 +278,6 @@ class ItemCard extends StatefulWidget {
 }
 
 class _ItemCardState extends State<ItemCard> {
-
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -151,9 +293,7 @@ class _ItemCardState extends State<ItemCard> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                widget.image != null
-                    ? widget.image
-                    : 'https://www.testingxperts.com/wp-content/uploads/2019/02/placeholder-img.jpg',
+                widget.image ?? 'https://www.testingxperts.com/wp-content/uploads/2019/02/placeholder-img.jpg',
                 fit: BoxFit.cover,
               ),
             ),
@@ -165,14 +305,14 @@ class _ItemCardState extends State<ItemCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    widget.itemName,
-                    style: TextStyle(
+                    widget.itemName.toString(),
+                    style: const TextStyle(
                       fontSize: 19,
                     ),
                   ),
                   Text(
                     '\u{20B9}${widget.price}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 19,
                     ),
                   ),
@@ -187,8 +327,8 @@ class _ItemCardState extends State<ItemCard> {
                   Expanded(
                     flex: 5,
                     child: Text(
-                      widget.description,
-                      style: TextStyle(
+                      widget.description.toString(),
+                      style: const TextStyle(
                         fontSize: 16,
                       ),
                     ),
