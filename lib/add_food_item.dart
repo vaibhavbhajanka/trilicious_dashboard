@@ -47,6 +47,8 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
   // List<String> _addOns = ['Mushroom', 'Olives', 'Cheese'];
   //   String? _selected = 'Regular';
 
+  bool isLoading = false;
+
   _showImage() {
     if (_imageFile == null && _imageUrl == null) {
       return const Text("image placeholder");
@@ -269,7 +271,7 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
           _currentFoodItem!,
           foodItemNotifier.currentCategory.toString(),
           widget.isUpdating,
-          _imageFile!,
+          _imageFile,
           _onFoodItemUploaded);
 
       // print("name: ${_currentFoodItem?.itemName}");
@@ -288,9 +290,9 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
       foodItemNotifier.deleteFoodItem(
           foodItem, foodItemNotifier.currentCategory.toString());
     }
-
+    
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('ADD Food ITEM'),
         backgroundColor: Colors.orange,
@@ -322,7 +324,9 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: isLoading?
+      const Center(child: CircularProgressIndicator()):
+      SingleChildScrollView(
         child: Column(
           children: [
             Form(
@@ -409,7 +413,16 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
                 primary: Colors.orange,
               ),
               onPressed: () {
+                setState(() {
+                  isLoading=true;
+                });
                 _saveFoodItem();
+                setState(() {
+                  isLoading=false;
+                });
+                final snackBar = const SnackBar(content: Text('Updated Item Info'),
+                          duration: Duration(seconds: 1),);
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
               },
               child: Padding(
                 padding: const EdgeInsets.only(

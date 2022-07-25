@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:trilicious_dashboard/models/restaurant.dart';
 import 'package:path/path.dart' as path;
 import 'package:trilicious_dashboard/notifiers/profile_notifier.dart';
@@ -88,6 +89,11 @@ _uploadrestaurant(Restaurant restaurant,
     await restaurantRef
         .doc(email)
         .set(restaurant.toMap());
+    
+
+                          // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Coming Soon!'),
+                          // duration: const Duration(seconds: 1),));
+    
     print('updated restaurant with id: $email');
     // Navigator.pop(context);
   // } else {

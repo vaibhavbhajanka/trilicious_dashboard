@@ -177,7 +177,7 @@ getFoodItems(FoodItemNotifier foodItemNotifier) async {
 //   foodItemNotifier.foodItemList = _foodItemList;
 // }
 
-uploadFoodItemAndImage(FoodItem foodItem,String category, bool isUpdating, File localFile,
+uploadFoodItemAndImage(FoodItem foodItem,String category, bool isUpdating, File ?localFile,
     Function foodItemUploaded) async {
   if (localFile != null) {
     print("uploading image");

@@ -159,10 +159,12 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
     }
   }
 
+  bool isLoading=false;
+
   @override
   Widget build(BuildContext context) {
-    ProfileNotifier profileNotifier =
-        Provider.of<ProfileNotifier>(context, listen: false);
+    // ProfileNotifier profileNotifier =
+    //     Provider.of<ProfileNotifier>(context, listen: false);
     final nameField = TextFormField(
       autofocus: false,
       initialValue: _currentRestaurant!.name,
@@ -250,24 +252,17 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
 
       _formKey.currentState!.save();
       print('form saved');
-      ProfileNotifier profileNotifier =
-          Provider.of<ProfileNotifier>(context, listen: false);
-      // print(_currentRestaurant);
-      // profileNotifier.currentRestaurant = _currentRestaurant;
-      // print(profileNotifier.currentRestaurant);
       uploadProfile(_currentRestaurant!, _coverImageFile, _profileImageFile);
-      // uploadFoodItemAndImage(_currentFoodItem!,foodItemNotifier.currentCategory.toString(), widget.isUpdating, _imageFile!,
-      //     _onFoodItemUploaded);
     }
 
     // FoodItemNotifier foodItemNotifier =
     //     Provider.of<FoodItemNotifier>(context, listen: false);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.close),
+          icon: const Icon(Icons.close),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -301,7 +296,9 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: isLoading?
+      const Center(child: const CircularProgressIndicator()):
+      SingleChildScrollView(
         child: Column(
           children: [
             Form(
@@ -402,7 +399,16 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
                 primary: Colors.orange,
               ),
               onPressed: () {
+                setState(() {
+                  isLoading = true;
+                });
                 _saveProfile();
+                setState(() {
+                  isLoading = false;
+                });
+                final snackBar = const SnackBar(content: Text('Updated Restaurant Profile'),
+                          duration: Duration(seconds: 1),);
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
               },
               child: Padding(
                 padding: const EdgeInsets.only(

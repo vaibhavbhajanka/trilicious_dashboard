@@ -1,5 +1,5 @@
 import 'package:trilicious_dashboard/api/food_item_api.dart';
-import 'package:trilicious_dashboard/api/profile_api.dart';
+// import 'package:trilicious_dashboard/api/profile_api.dart';
 // import 'package:trilicious_dashboard/models/food_item.dart';
 // import 'package:trilicious_dashboard/notifiers/category_notifier.dart';
 // import 'package:trilicious_dashboard/notifier/auth_notifier.dart';
@@ -8,7 +8,7 @@ import 'package:trilicious_dashboard/notifiers/food_item_notifier.dart';
 import 'package:trilicious_dashboard/add_food_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:trilicious_dashboard/notifiers/profile_notifier.dart';
+// import 'package:trilicious_dashboard/notifiers/profile_notifier.dart';
 
 // final _firestore = FirebaseFirestore.instance;
 
