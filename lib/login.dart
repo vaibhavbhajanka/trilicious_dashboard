@@ -176,24 +176,24 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                           ),
                         ),
-                        Container(
-                          padding:
-                              const EdgeInsets.fromLTRB(20.0, 20.0, 10.0, 0.0),
-                          child: InkWell(
-                            child: const Text(
-                              "Don't have an account? Click here to register",
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontSize: 20.0,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.pushReplacementNamed(
-                                  context, '/register');
-                            },
-                          ),
-                        ),
+                        // Container(
+                        //   padding:
+                        //       const EdgeInsets.fromLTRB(20.0, 20.0, 10.0, 0.0),
+                        //   child: InkWell(
+                        //     child: const Text(
+                        //       "Don't have an account? Click here to register",
+                        //       style: TextStyle(
+                        //         color: Colors.orange,
+                        //         fontSize: 20.0,
+                        //         fontWeight: FontWeight.w500,
+                        //       ),
+                        //     ),
+                        //     onTap: () {
+                        //       Navigator.pushReplacementNamed(
+                        //           context, '/register');
+                        //     },
+                        //   ),
+                        // ),
                         const Padding(
                           padding: EdgeInsets.only(bottom: 45.0),
                         ),
@@ -219,35 +219,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 onPressed: () {
                   signIn(emailController.text, passwordController.text);
-                  // Navigator.pushReplacementNamed(context, '/dashboard');
                 },
               ),
-              // const Text(
-              //   'OR',
-              //   style: TextStyle(
-              //     color: Colors.white,
-              //   ),
-              // ),
-              // GestureDetector(
-              //   onTap: (){
-              //     signInwithGoogle();
-              //   },
-              //   child: Padding(
-              //     padding: const EdgeInsets.symmetric(horizontal: 50),
-              //     child: Card(
-              //       child: ListTile(
-              //         leading: Image.asset('assets/images/google.png'),
-              //         title: const Text(
-              //           'Sign in with Google',
-              //           style: TextStyle(
-              //             fontSize: 20,
-              //             fontWeight: FontWeight.bold,
-              //           ),
-              //         ),
-              //       ),
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         ],

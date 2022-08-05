@@ -2,6 +2,7 @@ import 'dart:io';
 // import 'package:trilicious_dashboard/model/user_model.dart';
 // import 'package:trilicious_dashboard/models/catergory.dart';
 // import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:trilicious_dashboard/models/food_item.dart';
 // import 'package:trilicious_dashboard/notifiers/category_notifier.dart';
 import 'package:trilicious_dashboard/notifiers/food_item_notifier.dart';
@@ -9,6 +10,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as path;
 import 'package:uuid/uuid.dart';
+
+User? user = FirebaseAuth.instance.currentUser;
 
 // login(User user, AuthNotifier authNotifier) async {
 //   AuthResult authResult = await FirebaseAuth.instance
@@ -109,20 +112,22 @@ import 'package:uuid/uuid.dart';
 getCategories(FoodItemNotifier foodItemNotifier) async {
   // User? user = FirebaseAuth.instance.currentUser;
   DocumentSnapshot snapshot =
-      await FirebaseFirestore.instance.collection('menu').doc('category').get();
+      await FirebaseFirestore.instance.collection('menu').doc(user!.email).collection('categories').doc('category').get();
   print(snapshot.data());
   if (snapshot.exists) {
     List<String> _categories;
     Map<String, dynamic> data = snapshot.data() as Map<String, dynamic>;
     _categories = data['categories'].cast<String>();
     foodItemNotifier.categoryList = _categories;
+    foodItemNotifier.currentCategory = _categories.isNotEmpty? _categories[0]:"";
   }
   print(foodItemNotifier.categoryList);
+  print(foodItemNotifier.currentCategory);
 }
 
 uploadCategory(List<String> category) async {
   CollectionReference foodItemRef =
-      FirebaseFirestore.instance.collection('menu');
+      FirebaseFirestore.instance.collection('menu').doc(user!.email).collection('categories');
   Map<String, dynamic> categoryMap = {
     "categories": category,
   };
@@ -140,7 +145,8 @@ getFoodItems(FoodItemNotifier foodItemNotifier) async {
 
   for (int i = 0; i < categories.length; i++) {
     QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('menu')
+        .collection('menu').
+        doc(user!.email).collection('categories')
         .doc(categories[i])
         .collection('menuItems')
         .get();
@@ -209,8 +215,9 @@ uploadFoodItemAndImage(FoodItem foodItem,String category, bool isUpdating, File 
 
 _uploadFoodItem(FoodItem foodItem, String category,bool isUpdating, Function foodItemUploaded,
     {String? imageUrl}) async {
+  // User? user = 
   CollectionReference foodItemRef =
-      FirebaseFirestore.instance.collection('menu')
+      FirebaseFirestore.instance.collection('menu').doc(user!.email).collection('categories')
   .doc(category).collection('menuItems');
 
   if (imageUrl != null) {
@@ -243,14 +250,14 @@ _uploadFoodItem(FoodItem foodItem, String category,bool isUpdating, Function foo
 
 changeAvailability(FoodItem? foodItem,String category, bool isAvailable) async {
   CollectionReference foodItemRef =
-      FirebaseFirestore.instance.collection('menu').doc(category).collection('menuItems');
+      FirebaseFirestore.instance.collection('menu').doc(user!.email).collection('categories').doc(category).collection('menuItems');
   print('updating:${foodItem?.id}');
   foodItem?.isAvailable = isAvailable;
   await foodItemRef.doc(foodItem?.id.toString()).update(foodItem!.toMap());
   print('Avaibility successfully changed for Fooditem: ${foodItem.toString()}');
 }
 
-deleteFoodItem(FoodItem foodItem, Function foodItemDeleted) async {
+deleteFoodItem(FoodItem foodItem, Function foodItemDeleted,String currentCategory) async {
   if (foodItem.image != null) {
     final storageReference =
         FirebaseStorage.instance.refFromURL(foodItem.image.toString());
@@ -260,6 +267,6 @@ deleteFoodItem(FoodItem foodItem, Function foodItemDeleted) async {
     print('image deleted');
   }
 
-  await FirebaseFirestore.instance.collection('menu').doc(foodItem.id).delete();
+  await FirebaseFirestore.instance.collection('menu').doc(user!.email).collection('categories').doc(currentCategory).collection('menuItems').doc(foodItem.id).delete();
   foodItemDeleted(foodItem);
 }

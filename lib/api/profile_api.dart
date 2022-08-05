@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
@@ -81,37 +82,37 @@ _uploadrestaurant(Restaurant restaurant,
   }
   print(restaurant);
 
-  // User? user = FirebaseAuth.instance.currentUser;
-  String email = "abc@gmail.com";
+  User? user = FirebaseAuth.instance.currentUser;
+  // String email = "abc@gmail.com";
   // if (isUpdating) {
     // restaurant.updatedAt = Timestamp.now();
     // print('updating:${restaurant.id}');
     await restaurantRef
-        .doc(email)
+        .doc(user!.email)
         .set(restaurant.toMap());
     
 
                           // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('Coming Soon!'),
                           // duration: const Duration(seconds: 1),));
     
-    print('updated restaurant with id: $email');
+    print('updated restaurant with id: ${user.email}');
     // Navigator.pop(context);
   // } else {
   // }
 }
 
-getProfile(ProfileNotifier profileNotifier) async {
-  // User? user = FirebaseAuth.instance.currentUser;
-  DocumentSnapshot snapshot =
-      await FirebaseFirestore.instance.collection('restaurants').doc('abc@gmail.com').get();
-  // print(snapshot.data());
-  Restaurant _restaurant = Restaurant();
-  if (snapshot.exists) {
-    _restaurant = Restaurant.fromMap(snapshot.data());
-  }
-  profileNotifier.currentRestaurant = _restaurant;
-  print(profileNotifier.currentRestaurant?.name);
-  print(profileNotifier.currentRestaurant?.address);
-  print(profileNotifier.currentRestaurant?.coverImage);
-  print(profileNotifier.currentRestaurant?.profileImage);
-}
+// getProfile(ProfileNotifier profileNotifier) async {
+//   // User? user = FirebaseAuth.instance.currentUser;
+//   DocumentSnapshot snapshot =
+//       await FirebaseFirestore.instance.collection('restaurants').doc('abc@gmail.com').get();
+//   // print(snapshot.data());
+//   Restaurant _restaurant = Restaurant();
+//   if (snapshot.exists) {
+//     _restaurant = Restaurant.fromMap(snapshot.data());
+//   }
+//   profileNotifier.currentRestaurant = _restaurant;
+//   print(profileNotifier.currentRestaurant?.name);
+//   print(profileNotifier.currentRestaurant?.address);
+//   print(profileNotifier.currentRestaurant?.coverImage);
+//   print(profileNotifier.currentRestaurant?.profileImage);
+// }

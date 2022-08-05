@@ -1,4 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:trilicious_dashboard/api/food_item_api.dart';
+import 'package:trilicious_dashboard/models/food_item.dart';
 // import 'package:trilicious_dashboard/api/profile_api.dart';
 // import 'package:trilicious_dashboard/models/food_item.dart';
 // import 'package:trilicious_dashboard/notifiers/category_notifier.dart';
@@ -12,6 +15,8 @@ import 'package:provider/provider.dart';
 
 // final _firestore = FirebaseFirestore.instance;
 
+User? user = FirebaseAuth.instance.currentUser;
+
 class Menu extends StatefulWidget {
   const Menu({Key? key}) : super(key: key);
 
@@ -20,17 +25,24 @@ class Menu extends StatefulWidget {
 }
 
 class _MenuState extends State<Menu> {
+  bool isLoaded = false;
   @override
   void initState() {
     FoodItemNotifier foodItemNotifier =
-        Provider.of<FoodItemNotifier>(context,listen: false);
+        Provider.of<FoodItemNotifier>(context, listen: false);
     // ProfileNotifier profileNotifier = Provider.of<ProfileNotifier>(context,listen:false);
     // getProfile(profileNotifier);
     // print(profileNotifier.currentRestaurant);
-    getCategories(foodItemNotifier).then((value){
-      getFoodItems(foodItemNotifier);
-      foodItemNotifier.currentCategory=foodItemNotifier.categoryList[0];
+    getCategories(foodItemNotifier).then((value) {
+      setState(() {
+        isLoaded=true;
       });
+      // getFoodItems(foodItemNotifier);
+    //   foodItemNotifier.currentCategory =
+    //   foodItemNotifier.categoryList.isNotEmpty?
+    //      foodItemNotifier.categoryList.first
+    //      :"";
+    });
     super.initState();
   }
 
@@ -44,15 +56,13 @@ class _MenuState extends State<Menu> {
     // List<FoodItem>? itemList = foodItemNotifier.foodItemMap[foodItemNotifier.currentCategory.toString()];
 
     Future<void> _refreshList() async {
-      getCategories(foodItemNotifier).then((value){
-      getFoodItems(foodItemNotifier);
-      // foodItemNotifier.currentCategory=foodItemNotifier.categoryList[0];
+      getCategories(foodItemNotifier).then((value) {
+        getFoodItems(foodItemNotifier);
+        // foodItemNotifier.currentCategory=foodItemNotifier.categoryList[0];
       });
     }
 
-    // List<String> categoryList = ['Pizza', 'Pasta'];
-
-    // print("building Menu");
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -60,101 +70,232 @@ class _MenuState extends State<Menu> {
             'MENU'),
         backgroundColor: Colors.orange,
       ),
-      body: Column(
+      body: isLoaded==false?
+      CircularProgressIndicator():
+       Column(
         children: [
-          Flexible(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                color: Colors.orange,
-                child: Row(
-                  children: [
-                    foodItemNotifier.categoryList.isNotEmpty?
-                    Expanded(
-                      child: ListView.builder(
-                          itemCount: foodItemNotifier.categoryList.length,
-                          // reverse: true,
-                          scrollDirection: Axis.horizontal,
-                          itemBuilder: (BuildContext context, int index) {
-                            return CategoryButton(
-                                category: foodItemNotifier.categoryList[index],
-                                onPressed: () {
-                                  foodItemNotifier.currentCategory=foodItemNotifier.categoryList[index];
-                                  foodItemNotifier.foodItemList=foodItemNotifier.foodItemMap[foodItemNotifier.currentCategory.toString()]??[];
-                                  print(foodItemNotifier.foodItemList);
-                                },
-                                isSelected: foodItemNotifier.currentCategory==foodItemNotifier.categoryList[index],
-                                );
-                                
-                          }),
-                    ):Container(),
-                    IconButton(
-                      onPressed: () => showAddCategoryDialog(context),
-                      icon: const Icon(
-                        Icons.add,
-                        color: Colors.white,
-                      ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              color: Colors.orange,
+              child: Row(
+                children: [
+                  Flexible(
+                    child: StreamBuilder(
+                      // initialData: <S,
+                        stream: FirebaseFirestore.instance
+                            .collection('menu')
+                            .doc(user!.email)
+                            .collection('categories')
+                            .doc('category')
+                            .snapshots(),
+                        builder: (context,
+                            AsyncSnapshot<DocumentSnapshot> snapshot) {
+                          List<String> categories =
+                              snapshot.data?['categories'].cast<String>();
+                          // foodItemNotifier.currentCategory=categories[0];
+                          return snapshot.hasData
+                              ? ConstrainedBox(
+                                  constraints: BoxConstraints.expand(
+                                      width: double.infinity,
+                                      height: size.height * 0.08),
+                                  child: ListView.builder(
+                                      itemCount: categories.length,
+                                      // reverse: true,
+                                      scrollDirection: Axis.horizontal,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                            // foodItemNotifier.currentCategory=categories[0];
+                                        return CategoryButton(
+                                          category: categories[index],
+                                          onPressed: () {
+                                            foodItemNotifier.currentCategory =
+                                                categories[index];
+                                            // foodItemNotifier.foodItemList =
+                                            //     foodItemNotifier.foodItemMap[
+                                            //             foodItemNotifier
+                                            //                 .currentCategory
+                                            //                 .toString()] ??
+                                            //         [];
+                                            // print(
+                                            //     foodItemNotifier.foodItemList);
+                                          },
+                                          isSelected: foodItemNotifier
+                                                  .currentCategory ==
+                                              categories[index],
+                                        );
+                                      }),
+                                )
+                              : Container();
+                        }),
+                  ),
+                  // foodItemNotifier.categoryList.isNotEmpty?
+                  // Expanded(
+                  //   child: ListView.builder(
+                  //       itemCount: foodItemNotifier.categoryList.length,
+                  //       // reverse: true,
+                  //       scrollDirection: Axis.horizontal,
+                  //       itemBuilder: (BuildContext context, int index) {
+                  //         return CategoryButton(
+                  //             category: foodItemNotifier.categoryList[index],
+                  //             onPressed: () {
+                  //               foodItemNotifier.currentCategory=foodItemNotifier.categoryList[index];
+                  //               foodItemNotifier.foodItemList=foodItemNotifier.foodItemMap[foodItemNotifier.currentCategory.toString()]??[];
+                  //               print(foodItemNotifier.foodItemList);
+                  //             },
+                  //             isSelected: foodItemNotifier.currentCategory==foodItemNotifier.categoryList[index],
+                  //             );
+
+                  //       }),
+                  // ):Container(),
+                  IconButton(
+                    onPressed: () => showAddCategoryDialog(context),
+                    icon: const Icon(
+                      Icons.add,
+                      color: Colors.white,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-          foodItemNotifier.foodItemList.isNotEmpty?
-          Flexible(
-            flex: 7,
-            child: RefreshIndicator(
-              child: ListView.separated(
-                itemBuilder: (BuildContext context, int index) {
-                  return GestureDetector(
-                    onTap: () {
-                      foodItemNotifier.currentFoodItem =
-                          foodItemNotifier.foodItemList[index];
-                      Navigator.of(context).push(
-                          MaterialPageRoute(builder: (BuildContext context) {
-                        return const AddFoodItemScreen(
-                          isUpdating: true,
-                        );
-                      }));
-                    },
-                    child: ItemCard(
-                      image:
-                          foodItemNotifier.foodItemList[index].image.toString(),
-                      itemName: foodItemNotifier.foodItemList[index].itemName
-                          .toString(),
-                      description: foodItemNotifier.foodItemList[index].description
-                          .toString(),
-                      price: foodItemNotifier.foodItemList[index].price
-                          ??0,
-                      isAvailable: Switch(
-                        value:
-                            foodItemNotifier.foodItemList[index].isAvailable ??
-                                false,
-                        onChanged: (value) {
-                          foodItemNotifier.currentFoodItem =
-                              foodItemNotifier.foodItemList[index];
-                          // setState(() {
-                          foodItemNotifier.foodItemList[index].isAvailable =
-                              value;
-                          changeAvailability(
-                              foodItemNotifier.foodItemList[index],foodItemNotifier.currentCategory.toString(), value);
-                          // });
-                        },
-                      ),
-                    ),
-                  );
-                },
-                itemCount: foodItemNotifier.foodItemList.length,
-                separatorBuilder: (BuildContext context, int index) {
-                  return const SizedBox(
-                    width: 0,
-                    height: 0,
-                  );
-                },
-              ),
-              onRefresh: _refreshList,
-            ),
-          ):const Flexible(flex: 7,child: Center(child: Text('No Items in this category'),)),
+          StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('menu')
+                  .doc(user!.email)
+                  .collection('categories')
+                  .doc(foodItemNotifier.currentCategory)
+                  .collection('menuItems')
+                  .snapshots(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> snapshot) {
+                print(snapshot.data?.docs);
+                // List<FoodItem> _items =
+                //       FoodItem.fromMap(snapshot.data?.docs) as List<FoodItem>;
+                // print(_items);
+                return snapshot.hasData
+                    ? Flexible(
+                        flex: 7,
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            FoodItem foodItem =
+                                FoodItem.fromMap(snapshot.data!.docs[index]);
+                            return GestureDetector(
+                              onTap: () {
+                                foodItemNotifier.currentFoodItem =foodItem;
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (BuildContext context) {
+                                  return const AddFoodItemScreen(
+                                    isUpdating: true,
+                                  );
+                                }));
+                              },
+                              child: ItemCard(
+                                image: foodItem.image
+                                    .toString(),
+                                itemName: foodItem.itemName
+                                    .toString(),
+                                description: foodItem.description
+                                    .toString(),
+                                price: foodItem.price ??
+                                    0,
+                                isAvailable: Switch(
+                                  value: foodItem.isAvailable ??
+                                      false,
+                                  onChanged: (value) {
+                                    foodItemNotifier.currentFoodItem =
+                                        foodItem;
+                                        // Notifier.foodItemList[index];
+                                    // setState(() {
+                                    // foodItemNotifier.foodItemList[index]
+                                    //     .isAvailable = value;
+                                    foodItem.isAvailable=value;
+                                    changeAvailability(
+                                        // foodItemNotifier.foodItemList[index],
+                                        foodItem,
+                                        foodItemNotifier.currentCategory
+                                            .toString(),
+                                        value);
+                                    // });
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : const Flexible(
+                        flex: 7,
+                        child: Center(
+                          child: Text('No Items in this category'),
+                        ));
+              }),
+          // foodItemNotifier.foodItemList.isNotEmpty
+          //     ? Flexible(
+          //         flex: 7,
+          //         child: RefreshIndicator(
+          //           child: ListView.separated(
+          //             itemBuilder: (BuildContext context, int index) {
+          // return GestureDetector(
+          //   onTap: () {
+          //     foodItemNotifier.currentFoodItem =
+          //         foodItemNotifier.foodItemList[index];
+          //     Navigator.of(context).push(MaterialPageRoute(
+          //         builder: (BuildContext context) {
+          //       return const AddFoodItemScreen(
+          //         isUpdating: true,
+          //       );
+          //     }));
+          //   },
+          //   child: ItemCard(
+          //     image: foodItemNotifier.foodItemList[index].image
+          //         .toString(),
+          //     itemName: foodItemNotifier
+          //         .foodItemList[index].itemName
+          //         .toString(),
+          //     description: foodItemNotifier
+          //         .foodItemList[index].description
+          //         .toString(),
+          //     price:
+          //         foodItemNotifier.foodItemList[index].price ?? 0,
+          //     isAvailable: Switch(
+          //       value: foodItemNotifier
+          //               .foodItemList[index].isAvailable ??
+          //           false,
+          //       onChanged: (value) {
+          //         foodItemNotifier.currentFoodItem =
+          //             foodItemNotifier.foodItemList[index];
+          //         // setState(() {
+          //         foodItemNotifier
+          //             .foodItemList[index].isAvailable = value;
+          //         changeAvailability(
+          //             foodItemNotifier.foodItemList[index],
+          //             foodItemNotifier.currentCategory.toString(),
+          //             value);
+          //         // });
+          //       },
+          //     ),
+          //   ),
+          // );
+          //             },
+          //             itemCount: foodItemNotifier.foodItemList.length,
+          //             separatorBuilder: (BuildContext context, int index) {
+          //               return const SizedBox(
+          //                 width: 0,
+          //                 height: 0,
+          //               );
+          //             },
+          //           ),
+          //           onRefresh: _refreshList,
+          //         ),
+          //       )
+          //     : const Flexible(
+          //         flex: 7,
+          //         child: Center(
+          //           child: Text('No Items in this category'),
+          //         )),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -180,12 +321,12 @@ class CategoryButton extends StatelessWidget {
   final String category;
   final VoidCallback onPressed;
   final bool isSelected;
-  const CategoryButton({
-    Key? key,
-    required this.category,
-    required this.onPressed,
-    required this.isSelected
-  }) : super(key: key);
+  const CategoryButton(
+      {Key? key,
+      required this.category,
+      required this.onPressed,
+      required this.isSelected})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -196,8 +337,8 @@ class CategoryButton extends StatelessWidget {
         child: Text(category),
         style: OutlinedButton.styleFrom(
           // backgroundColor: Colors.white,
-          primary: isSelected?Colors.black:Colors.white,
-          backgroundColor: isSelected?Colors.white:Colors.transparent,
+          primary: isSelected ? Colors.black : Colors.white,
+          backgroundColor: isSelected ? Colors.white : Colors.transparent,
           side: const BorderSide(
             color: Colors.white,
           ),
@@ -219,14 +360,14 @@ showAddCategoryDialog(BuildContext context) {
   showDialog(
     context: context,
     builder: (_) {
-    //   _onCategoryUploaded( foodItem) {
-    //   FoodItemNotifier foodItemNotifier =
-    //       Provider.of<FoodItemNotifier>(context, listen: false);
-    //   if (foodItem.updatedAt == null) {
-    //     foodItemNotifier.addFoodItem(foodItem);
-    //   }
-    //   Navigator.pop(context);
-    // }
+      //   _onCategoryUploaded( foodItem) {
+      //   FoodItemNotifier foodItemNotifier =
+      //       Provider.of<FoodItemNotifier>(context, listen: false);
+      //   if (foodItem.updatedAt == null) {
+      //     foodItemNotifier.addFoodItem(foodItem);
+      //   }
+      //   Navigator.pop(context);
+      // }
       FoodItemNotifier foodItemNotifier =
           Provider.of<FoodItemNotifier>(context);
       var categoryController = TextEditingController();
@@ -293,7 +434,8 @@ class _ItemCardState extends State<ItemCard> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                widget.image ?? 'https://www.testingxperts.com/wp-content/uploads/2019/02/placeholder-img.jpg',
+                widget.image ??
+                    'https://www.testingxperts.com/wp-content/uploads/2019/02/placeholder-img.jpg',
                 fit: BoxFit.cover,
               ),
             ),

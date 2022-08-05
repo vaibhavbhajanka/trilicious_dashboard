@@ -48,6 +48,7 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
   //   String? _selected = 'Regular';
 
   bool isLoading = false;
+  bool isDeleting = false;
 
   _showImage() {
     if (_imageFile == null && _imageUrl == null) {
@@ -252,10 +253,20 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
         foodItemNotifier.addFoodItem(
             foodItem, foodItemNotifier.currentCategory.toString());
       }
+      final snackBar = SnackBar(
+        content: widget.isUpdating == true
+            ? const Text('Updated Item Info')
+            : const Text('Added Item Info'),
+        duration: const Duration(seconds: 1),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
       Navigator.pop(context);
     }
 
     _saveFoodItem() {
+      setState(() {
+        isLoading = true;
+      });
       print('saveFoodItem Called');
       if (!_formKey.currentState!.validate()) {
         return;
@@ -268,12 +279,14 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
           Provider.of<FoodItemNotifier>(context, listen: false);
 
       uploadFoodItemAndImage(
-          _currentFoodItem!,
-          foodItemNotifier.currentCategory.toString(),
-          widget.isUpdating,
-          _imageFile,
-          _onFoodItemUploaded);
-
+              _currentFoodItem!,
+              foodItemNotifier.currentCategory.toString(),
+              widget.isUpdating,
+              _imageFile,
+              _onFoodItemUploaded)
+          .then((value) {
+        isLoading = false;
+      });
       // print("name: ${_currentFoodItem?.itemName}");
       // print("description: ${_currentFoodItem?.description}");
       // print("price: ${_currentFoodItem?.price.toString()}");
@@ -286,15 +299,23 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
 
     _onFoodItemDeleted(FoodItem foodItem) {
       // CategoryNotifier categoryNotifier = Provider.of<CategoryNotifier>(context, listen: false);
+      final snackBar = SnackBar(
+        content:const Text('Deleted Item Info'),
+        duration: const Duration(seconds: 1),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
       Navigator.pop(context);
-      foodItemNotifier.deleteFoodItem(
-          foodItem, foodItemNotifier.currentCategory.toString());
+      
+      // foodItemNotifier
+      //     .deleteFoodItem(foodItem, foodItemNotifier.currentCategory.toString());
     }
-    
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text('ADD Food ITEM'),
+        title: widget.isUpdating == true
+            ? const Text('Update Food Item')
+            : const Text('Add Food Item'),
         backgroundColor: Colors.orange,
         actions: [
           IconButton(
@@ -313,8 +334,18 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
                           text: 'OK',
                           onPressed: () {
                             Navigator.of(context).pop();
+                            setState(() {
+                              isLoading = true;
+                            });
                             deleteFoodItem(
-                                _currentFoodItem!, _onFoodItemDeleted);
+                                    _currentFoodItem!,
+                                    _onFoodItemDeleted,
+                                    foodItemNotifier.currentCategory.toString())
+                                .then((value) {
+                              setState(() {
+                                isLoading = false;
+                              });
+                            });
                           }),
                     ],
                   );
@@ -324,129 +355,128 @@ class _AddFoodItemScreenState extends State<AddFoodItemScreen> {
           ),
         ],
       ),
-      body: isLoading?
-      const Center(child: CircularProgressIndicator()):
-      SingleChildScrollView(
-        child: Column(
-          children: [
-            Form(
-              key: _formKey,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const SizedBox(
+                          height: 15,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: itemNameField,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(1.0),
+                          child: ListTile(
+                            title: const Text(
+                              'Item Image',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                            subtitle: _imageFile == null && _imageUrl == null
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Center(
+                                      child: OutlinedButton(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(50.0),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: const [
+                                              Icon(Icons.add),
+                                              Text(
+                                                'Add Image',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          _getLocalImage();
+                                        },
+                                      ),
+                                    ),
+                                  )
+                                : _showImage(),
+                          ),
+                        ),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        //   children: [
+                        //     DropdownButton<String>(
+                        //         value: _selectedOption,
+                        //         items: _options.map(
+                        //           (item) => DropdownMenuItem<String>(
+                        //             value: item,
+                        //             child: Text(item),
+                        //           ),
+                        //         ).toList(),
+                        //         onChanged: (item)=>setState(() {
+                        //           _selectedOption=item;
+                        //         }),),
+                        //   ],
+                        // ),
+                        Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: itemDescriptionField,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: priceField,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(
                     height: 15,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: itemNameField,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(1.0),
-                    child: ListTile(
-                      title: const Text(
-                        'Item Image',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                      subtitle: _imageFile == null && _imageUrl == null
-                          ? Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Center(
-                                child: OutlinedButton(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(50.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(Icons.add),
-                                        Text(
-                                          'Add Image',
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    _getLocalImage();
-                                  },
-                                ),
-                              ),
-                            )
-                          : _showImage(),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.orange,
                     ),
-                  ),
-                  // Row(
-                  //   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  //   children: [
-                  //     DropdownButton<String>(
-                  //         value: _selectedOption,
-                  //         items: _options.map(
-                  //           (item) => DropdownMenuItem<String>(
-                  //             value: item,
-                  //             child: Text(item),
-                  //           ),
-                  //         ).toList(),
-                  //         onChanged: (item)=>setState(() {
-                  //           _selectedOption=item;
-                  //         }),),
-                  //   ],
-                  // ),
-                  Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: itemDescriptionField,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: priceField,
+                    onPressed: () {
+                      // setState(() {
+                      //   isLoading=true;
+                      // });
+                      _saveFoodItem();
+                      // then((value){
+                      //   setState(() {
+                      //   isLoading=false;
+                      // });
+                      // });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 80, right: 80, top: 20, bottom: 20),
+                      child: Wrap(
+                        children: const [
+                          Text(
+                            'Done',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20.0,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          // Icon(Icons.arrow_forward)
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(
-              height: 15,
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: Colors.orange,
-              ),
-              onPressed: () {
-                setState(() {
-                  isLoading=true;
-                });
-                _saveFoodItem();
-                setState(() {
-                  isLoading=false;
-                });
-                final snackBar = const SnackBar(content: Text('Updated Item Info'),
-                          duration: Duration(seconds: 1),);
-                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(
-                    left: 80, right: 80, top: 20, bottom: 20),
-                child: Wrap(
-                  children: const [
-                    Text(
-                      'Done',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20.0,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    // Icon(Icons.arrow_forward)
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

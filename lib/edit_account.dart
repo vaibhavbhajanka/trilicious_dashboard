@@ -269,32 +269,32 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
         ),
         title: const Text('Edit Account'),
         backgroundColor: Colors.orange,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Logout of Account?'),
-                    actions: [
-                      _DialogButton(
-                          text: 'Cancel',
-                          onPressed: () => Navigator.of(context).pop()),
-                      _DialogButton(
-                          text: 'OK',
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            //logout function
-                          }),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.logout),
+        //     onPressed: () {
+        //       showDialog(
+        //         context: context,
+        //         builder: (BuildContext context) {
+        //           return AlertDialog(
+        //             title: const Text('Logout of Account?'),
+        //             actions: [
+        //               _DialogButton(
+        //                   text: 'Cancel',
+        //                   onPressed: () => Navigator.of(context).pop()),
+        //               _DialogButton(
+        //                   text: 'OK',
+        //                   onPressed: () {
+        //                     Navigator.of(context).pop();
+        //                     //logout function
+        //                   }),
+        //             ],
+        //           );
+        //         },
+        //       );
+        //     },
+        //   ),
+        // ],
       ),
       body: isLoading?
       const Center(child: const CircularProgressIndicator()):
@@ -437,18 +437,4 @@ class _EditAccountScreenState extends State<EditAccountScreen> {
   }
 }
 
-class _DialogButton extends StatelessWidget {
-  const _DialogButton({Key? key, required this.text, required this.onPressed})
-      : super(key: key);
 
-  final String text;
-  final void Function() onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: onPressed,
-      child: Text(text),
-    );
-  }
-}

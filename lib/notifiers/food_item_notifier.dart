@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 
 class FoodItemNotifier with ChangeNotifier {
   List<String> _categoryList = [];
-  String? _currentCategory;
+  String _currentCategory="";
 
   Map<String,List<FoodItem>> _foodItemMap ={};
 
@@ -43,14 +43,14 @@ class FoodItemNotifier with ChangeNotifier {
     notifyListeners();
   }
   
-  String? get currentCategory => _currentCategory;
+  String get currentCategory => _currentCategory;
 
   set categoryList(List<String> categoryList) {
     _categoryList = categoryList;
     notifyListeners();
   }
 
-  set currentCategory(String? category) {
+  set currentCategory(String category) {
     _currentCategory = category;
     notifyListeners();
   }
