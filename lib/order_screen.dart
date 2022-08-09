@@ -1,12 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:date_picker_timeline/date_picker_timeline.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:trilicious_dashboard/api/food_item_api.dart';
 // import 'package:provider/provider.dart';
 import 'package:trilicious_dashboard/api/order_api.dart';
 // import 'package:trilicious_dashboard/api/order_api.dart';
 import 'package:trilicious_dashboard/models/order.dart';
 // import 'package:trilicious_dashboard/notifiers/order_notifier.dart';
+
+User? user = FirebaseAuth.instance.currentUser;
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -73,6 +77,8 @@ class _OrderScreenState extends State<OrderScreen> {
               child: TabBarView(children: [
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
+                      .collection('order')
+                      .doc(user!.email)
                       .collection('date')
                       .doc(_selectedDate)
                       .collection('orders')
@@ -128,6 +134,8 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
+                      .collection('order')
+                      .doc(user!.email)
                       .collection('date')
                       .doc(_selectedDate)
                       .collection('orders')

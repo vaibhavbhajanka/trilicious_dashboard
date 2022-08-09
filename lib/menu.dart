@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:trilicious_dashboard/api/food_item_api.dart';
+import 'package:trilicious_dashboard/api/profile_api.dart';
 import 'package:trilicious_dashboard/models/food_item.dart';
 // import 'package:trilicious_dashboard/api/profile_api.dart';
 // import 'package:trilicious_dashboard/models/food_item.dart';
@@ -11,6 +12,7 @@ import 'package:trilicious_dashboard/notifiers/food_item_notifier.dart';
 import 'package:trilicious_dashboard/add_food_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:trilicious_dashboard/notifiers/profile_notifier.dart';
 // import 'package:trilicious_dashboard/notifiers/profile_notifier.dart';
 
 // final _firestore = FirebaseFirestore.instance;
@@ -30,8 +32,8 @@ class _MenuState extends State<Menu> {
   void initState() {
     FoodItemNotifier foodItemNotifier =
         Provider.of<FoodItemNotifier>(context, listen: false);
-    // ProfileNotifier profileNotifier = Provider.of<ProfileNotifier>(context,listen:false);
-    // getProfile(profileNotifier);
+    ProfileNotifier profileNotifier = Provider.of<ProfileNotifier>(context,listen:false);
+    getProfile(profileNotifier);
     // print(profileNotifier.currentRestaurant);
     getCategories(foodItemNotifier).then((value) {
       setState(() {
@@ -52,7 +54,6 @@ class _MenuState extends State<Menu> {
   Widget build(BuildContext context) {
     // AuthNotifier authNotifier = Provider.of<AuthNotifier>(context);
     FoodItemNotifier foodItemNotifier = Provider.of<FoodItemNotifier>(context);
-
     // List<FoodItem>? itemList = foodItemNotifier.foodItemMap[foodItemNotifier.currentCategory.toString()];
 
     Future<void> _refreshList() async {
