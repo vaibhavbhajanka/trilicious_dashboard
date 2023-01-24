@@ -68,7 +68,7 @@ class _MenuState extends State<Menu> {
       appBar: AppBar(
         title: const Text(
             // authNotifier.user != null ? authNotifier.user.displayName : "Menu",
-            'MENU'),
+            'DASHBOARD'),
         backgroundColor: Colors.orange,
       ),
       body: isLoaded==false?
